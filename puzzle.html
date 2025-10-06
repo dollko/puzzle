@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>スライドパズル</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      grid-template-rows: repeat(4, 80px);
+      gap: 5px;
+      margin: 30px auto;
+      width: max-content;
+    }
+    .tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      background: #87cefa;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    .empty {
+      background: #f0f0f0;
+      cursor: default;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>スライドパズル（15パズル）</h1>
+  <div id="board"></div>
+  <button onclick="shuffle()">🔀 シャッフル</button>
+  <div id="message"></div>
+
+  <script>
+    const SIZE = 4;
+    let tiles = [];
+
+    function initBoard() {
+      tiles = [];
+      for (let i = 1; i < SIZE*SIZE; i++) tiles.push(i);
+      tiles.push(""); // 空白
+      drawBoard();
+    }
+
+    function drawBoard() {
+      const board = document.getElementById("board");
+      board.innerHTML = "";
+      tiles.forEach((val, i) => {
+        const cell = document.createElement("div");
+        cell.className = "tile";
+        if (val === "") {
+          cell.classList.add("empty");
+        } else {
+          cell.textContent = val;
+          cell.onclick = () => moveTile(i);
+        }
+        board.appendChild(cell);
+      });
+    }
+
+    function moveTile(i) {
+      const emptyIndex = tiles.indexOf("");
+      const validMoves = [emptyIndex-1, emptyIndex+1, emptyIndex-SIZE, emptyIndex+SIZE];
+      if (validMoves.includes(i) && isAdjacent(i, emptyIndex)) {
+        [tiles[i], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[i]];
+        drawBoard();
+        checkWin();
+      }
+    }
+
+    function isAdjacent(i, j) {
+      const xi = i % SIZE, yi = Math.floor(i / SIZE);
+      const xj = j % SIZE, yj = Math.floor(j / SIZE);
+      return (Math.abs(xi-xj) + Math.abs(yi-yj) === 1);
+    }
+
+    function shuffle() {
+      for (let i = 0; i < 1000; i++) {
+        const emptyIndex = tiles.indexOf("");
+        const moves = [emptyIndex-1, emptyIndex+1, emptyIndex-SIZE, emptyIndex+SIZE]
+          .filter(idx => idx >= 0 && idx < SIZE*SIZE && isAdjacent(idx, emptyIndex));
+        const randMove = moves[Math.floor(Math.random()*moves.length)];
+        [tiles[emptyIndex], tiles[randMove]] = [tiles[randMove], tiles[emptyIndex]];
+      }
+      drawBoard();
+      document.getElementById("message").textContent = "";
+    }
+
+    function checkWin() {
+      const goal = [...Array(SIZE*SIZE-1).keys()].map(i=>i+1).concat("");
+      if (JSON.stringify(tiles) === JSON.stringify(goal)) {
+        document.getElementById("message").textContent = "🎉 クリア！おめでとう！";
+      }
+    }
+
+    initBoard();
+  </script>
+</body>
+</html>
